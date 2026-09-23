@@ -18,7 +18,7 @@ import {
   updateWorkflow,
 } from '../api/client';
 import { DEMO_WORKFLOW_NAME, demoEdges, demoNodes } from '../data/demoWorkflow';
-import { getNodeDefinition } from '../nodes/registry';
+import { buildDefaultConfig, getNodeDefinition } from '../nodes/registry';
 import type {
   ApiStatus,
   NodeConfiguration,
@@ -175,6 +175,7 @@ export function useWorkflow(): UseWorkflowResult {
           name: definition.label,
           description: definition.description,
           status: 'ready',
+          config: buildDefaultConfig(definition),
         },
       };
 

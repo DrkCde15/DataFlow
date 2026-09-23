@@ -1,6 +1,7 @@
 import type {
   NodeCategory,
   NodeCategoryMeta,
+  NodeConfig,
   NodeDefinition,
 } from '../types';
 import { orchestrationNodes } from './orchestration';
@@ -45,4 +46,13 @@ export function getCategoryLabel(category: NodeCategory): string {
   return (
     NODE_CATEGORIES.find((entry) => entry.id === category)?.label ?? category
   );
+}
+
+export function buildDefaultConfig(definition: NodeDefinition): NodeConfig {
+  const config: NodeConfig = {};
+  for (const field of definition.configSchema ?? []) {
+    config[field.key] =
+      field.defaultValue ?? (field.type === 'file' ? null : '');
+  }
+  return config;
 }

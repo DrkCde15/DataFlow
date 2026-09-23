@@ -107,6 +107,11 @@ Persistência em SQLite (`backend/data/dataflow.db`).
 - Canvas com pan, zoom, minimap, controles, grid
 - Node Library com 5 categorias (Sources, Processing, Data Quality, Storage,
   Orchestration) — 22 node types, arrastáveis para o canvas
+- Configuração por node type: cada node define um `configSchema` e o painel
+  de propriedades renderiza o formulário dinamicamente (texto, select,
+  número, textarea, arquivo)
+- Node **File** (Sources): importe um arquivo local — o upload vai para o
+  backend (`POST /api/files`, máx. 50MB) e a referência fica na config do node
 - Conexões entre nodes (criar, selecionar, apagar)
 - Editar node: rename inline no card, name/description/status no painel
 - Excluir node: botão no card, botão no painel ou Backspace/Delete

@@ -73,6 +73,10 @@
   color: var(--text-muted);
 }
 
+.field__required {
+  color: var(--danger);
+}
+
 .field__input,
 .field__textarea {
   width: 100%;
@@ -125,6 +129,123 @@
 
 .properties-panel__delete:hover {
   background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.properties-panel__config {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-strong);
+}
+
+.properties-panel__section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.file-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-field__current {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+}
+
+.file-field__icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.file-field__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-field__size {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.file-field__empty {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.file-field__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.file-field__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.file-field__button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.file-field__button--busy {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.file-field__input {
+  display: none;
+}
+
+.file-field__remove {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--danger);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.file-field__remove:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.file-field__error {
+  font-size: 11.5px;
+  color: var(--danger);
 }
 
 .properties-panel__meta {

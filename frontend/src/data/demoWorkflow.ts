@@ -12,6 +12,11 @@ export const demoNodes: WorkflowNode[] = [
       name: 'REST API',
       description: 'API data source',
       status: 'ready',
+      config: {
+        url: 'https://api.example.com/v1/orders',
+        method: 'GET',
+        headers: '',
+      },
     },
   },
   {
@@ -23,6 +28,10 @@ export const demoNodes: WorkflowNode[] = [
       name: 'Bronze',
       description: 'Raw data storage layer',
       status: 'ready',
+      config: {
+        path: 'lake/bronze/orders',
+        table: 'orders_raw',
+      },
     },
   },
   {
@@ -34,6 +43,10 @@ export const demoNodes: WorkflowNode[] = [
       name: 'Silver',
       description: 'Cleansed and validated layer',
       status: 'ready',
+      config: {
+        path: 'lake/silver/orders',
+        table: 'orders_clean',
+      },
     },
   },
   {
@@ -45,6 +58,10 @@ export const demoNodes: WorkflowNode[] = [
       name: 'Gold',
       description: 'Business-ready aggregated layer',
       status: 'ready',
+      config: {
+        path: 'lake/gold/orders_summary',
+        table: 'orders_summary',
+      },
     },
   },
 ];

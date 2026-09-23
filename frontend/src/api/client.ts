@@ -123,3 +123,25 @@ export async function renameWorkflow(
 export async function deleteWorkflow(id: string): Promise<void> {
   await request<void>(`/api/workflows/${id}`, { method: 'DELETE' });
 }
+
+export interface UploadedFile {
+  id: string;
+  filename: string;
+  size: number;
+}
+
+export async function uploadFile(file: globalThis.File): Promise<UploadedFile> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/files`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, `Upload failed: ${response.status}`);
+  }
+
+  return (await response.json()) as UploadedFile;
+}

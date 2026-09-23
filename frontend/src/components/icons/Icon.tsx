@@ -15,11 +15,12 @@ const iconPaths: Record<IconName, ReactNode> = {
       <path d="M12 3c2.5 2.5 3.8 5.5 3.8 9S14.5 18.5 12 21c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z" />
     </>
   ),
-  csv: (
+  file: (
     <>
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M3 10h18" />
-      <path d="M9 10v10" />
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <path d="M8 13h8" />
+      <path d="M8 17h5" />
     </>
   ),
   json: (

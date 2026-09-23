@@ -9,9 +9,37 @@ export type NodeCategory =
 
 export type NodeStatus = 'ready' | 'draft' | 'error' | 'disabled';
 
+export type ConfigFieldType = 'text' | 'textarea' | 'number' | 'select' | 'file';
+
+export interface ConfigFieldOption {
+  value: string;
+  label: string;
+}
+
+export interface ConfigField {
+  key: string;
+  label: string;
+  type: ConfigFieldType;
+  placeholder?: string;
+  options?: ConfigFieldOption[];
+  defaultValue?: string | number;
+  required?: boolean;
+  accept?: string;
+}
+
+export interface FileAttachment {
+  id: string;
+  filename: string;
+  size: number;
+}
+
+export type ConfigValue = string | number | FileAttachment | null;
+
+export type NodeConfig = Record<string, ConfigValue>;
+
 export type IconName =
   | 'rest-api'
-  | 'csv'
+  | 'file'
   | 'json'
   | 'database'
   | 'server'
@@ -51,12 +79,14 @@ export interface NodeDefinition {
   category: NodeCategory;
   description: string;
   icon: IconName;
+  configSchema?: ConfigField[];
 }
 
 export interface NodeConfiguration {
   name: string;
   description: string;
   status: NodeStatus;
+  config?: NodeConfig;
 }
 
 export interface WorkflowNodeData extends NodeConfiguration {
