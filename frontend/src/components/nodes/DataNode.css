@@ -1,0 +1,200 @@
+.wf-node {
+  --node-accent: var(--text-muted);
+
+  min-width: 208px;
+  max-width: 240px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  color: var(--text-primary);
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+
+.wf-node--sources {
+  --node-accent: var(--cat-sources);
+}
+
+.wf-node--processing {
+  --node-accent: var(--cat-processing);
+}
+
+.wf-node--quality {
+  --node-accent: var(--cat-quality);
+}
+
+.wf-node--storage {
+  --node-accent: var(--cat-storage);
+}
+
+.wf-node--orchestration {
+  --node-accent: var(--cat-orchestration);
+}
+
+.wf-node:hover {
+  border-color: color-mix(in srgb, var(--node-accent) 55%, var(--border-strong));
+}
+
+.wf-node--selected {
+  border-color: var(--node-accent);
+  box-shadow:
+    0 0 0 1px var(--node-accent),
+    0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.wf-node__header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wf-node__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--node-accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--node-accent) 32%, transparent);
+  color: var(--node-accent);
+}
+
+.wf-node__titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.wf-node__name {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-node__name-input {
+  width: 100%;
+  min-width: 0;
+  padding: 1px 5px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  outline: none;
+}
+
+.wf-node__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.wf-node:hover .wf-node__actions,
+.wf-node--selected .wf-node__actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wf-node__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.1s ease,
+    border-color 0.1s ease,
+    color 0.1s ease;
+}
+
+.wf-node__action:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.wf-node__action--danger:hover {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+.wf-node__category {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.wf-node__status {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.wf-node[data-status='ready'] .wf-node__status {
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
+}
+
+.wf-node[data-status='draft'] .wf-node__status {
+  background: var(--warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 18%, transparent);
+}
+
+.wf-node[data-status='error'] .wf-node__status {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.wf-node[data-status='disabled'] .wf-node__status {
+  background: var(--text-muted);
+}
+
+.wf-node__description {
+  padding: 8px 11px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.wf-node .react-flow__handle {
+  width: 9px;
+  height: 9px;
+  background: var(--node-accent);
+  border: 2px solid var(--canvas-bg);
+}
+
+.wf-node .react-flow__handle:hover {
+  transform: scale(1.25);
+}
+
+.wf-node .react-flow__handle.connectingfrom,
+.wf-node .react-flow__handle.connectingto,
+.wf-node .react-flow__handle.valid {
+  background: var(--success);
+}

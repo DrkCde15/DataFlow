@@ -1,0 +1,13 @@
+.workflow-editor {
+  display: grid;
+  grid-template-rows: var(--header-height) minmax(0, 1fr) var(--status-height);
+  height: 100vh;
+  background: var(--bg-base);
+}
+
+.workflow-editor__body {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) auto;
+  min-height: 0;
+  min-width: 0;
+}
