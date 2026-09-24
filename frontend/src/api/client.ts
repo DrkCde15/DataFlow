@@ -36,6 +36,10 @@ export class ApiError extends Error {
   }
 }
 
+export function isServerUnreachable(error: unknown): boolean {
+  return !(error instanceof ApiError) || error.status >= 500;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,

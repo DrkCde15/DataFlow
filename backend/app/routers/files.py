@@ -4,7 +4,8 @@ from pathlib import Path
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
-UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "uploads"
+from ..database import UPLOAD_DIR
+
 MAX_FILE_SIZE = 50 * 1024 * 1024
 
 

@@ -4,6 +4,7 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 DB_PATH = DATA_DIR / "dataflow.db"
+UPLOAD_DIR = DATA_DIR / "uploads"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS workflows (

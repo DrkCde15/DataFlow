@@ -5,7 +5,7 @@ from contextlib import closing
 from datetime import datetime, timezone
 from typing import Any
 
-from .database import get_connection
+from .database import UPLOAD_DIR, get_connection
 
 WorkflowDict = dict[str, Any]
 
@@ -111,10 +111,51 @@ def update_workflow(
     return updated
 
 
+def _collect_file_ids(nodes: list[WorkflowDict]) -> list[str]:
+    file_ids: list[str] = []
+    for node in nodes:
+        data = node.get("data")
+        if not isinstance(data, dict):
+            continue
+        config = data.get("config")
+        if not isinstance(config, dict):
+            continue
+        file_ref = config.get("file")
+        if isinstance(file_ref, dict) and isinstance(file_ref.get("id"), str):
+            file_ids.append(file_ref["id"])
+    return file_ids
+
+
+def _parse_nodes_column(raw: str) -> list[WorkflowDict]:
+    try:
+        nodes = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return []
+    return nodes if isinstance(nodes, list) else []
+
+
 def delete_workflow(workflow_id: str) -> bool:
+    existing = get_workflow(workflow_id)
+    if existing is None:
+        return False
+
+    removed_files = set(_collect_file_ids(existing["nodes"]))
+
     with closing(get_connection()) as connection:
         with connection:
-            cursor = connection.execute(
+            connection.execute(
                 "DELETE FROM workflows WHERE id = ?", (workflow_id,)
             )
-    return cursor.rowcount > 0
+            rows = connection.execute("SELECT nodes FROM workflows").fetchall()
+
+    still_used: set[str] = set()
+    for row in rows:
+        still_used.update(_collect_file_ids(_parse_nodes_column(row["nodes"])))
+
+    for file_id in removed_files - still_used:
+        try:
+            (UPLOAD_DIR / file_id).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    return True

@@ -13,6 +13,7 @@ import {
   createWorkflow,
   deleteWorkflow as deleteWorkflowApi,
   fetchWorkflow,
+  isServerUnreachable,
   listWorkflows,
   renameWorkflow as renameWorkflowApi,
   updateWorkflow,
@@ -88,8 +89,10 @@ export function useWorkflow(): UseWorkflowResult {
       setWorkflows(list);
       setApiStatus('online');
       return list;
-    } catch {
-      setApiStatus('offline');
+    } catch (error) {
+      if (isServerUnreachable(error)) {
+        setApiStatus('offline');
+      }
       return [];
     }
   }, []);
@@ -261,8 +264,10 @@ export function useWorkflow(): UseWorkflowResult {
       setIsDirty(false);
       setSaveState('saved');
       await refreshWorkflows();
-    } catch {
-      setApiStatus('offline');
+    } catch (error) {
+      if (isServerUnreachable(error)) {
+        setApiStatus('offline');
+      }
       setSaveState('error');
     }
   }, [nodes, edges, workflowId, workflowName, refreshWorkflows]);
@@ -277,8 +282,10 @@ export function useWorkflow(): UseWorkflowResult {
         const record = await fetchWorkflow(id);
         applyRecord(record);
         setApiStatus('online');
-      } catch {
-        setApiStatus('offline');
+      } catch (error) {
+        if (isServerUnreachable(error)) {
+          setApiStatus('offline');
+        }
       }
     },
     [applyRecord, confirmDiscardChanges],
@@ -300,8 +307,10 @@ export function useWorkflow(): UseWorkflowResult {
         }
         setApiStatus('online');
         await refreshWorkflows();
-      } catch {
-        setApiStatus('offline');
+      } catch (error) {
+        if (isServerUnreachable(error)) {
+          setApiStatus('offline');
+        }
       }
     },
     [workflowId, refreshWorkflows],
@@ -321,8 +330,10 @@ export function useWorkflow(): UseWorkflowResult {
         if (isCurrent) {
           resetToLocalWorkflow();
         }
-      } catch {
-        setApiStatus('offline');
+      } catch (error) {
+        if (isServerUnreachable(error)) {
+          setApiStatus('offline');
+        }
       }
     },
     [workflowId, confirmDiscardChanges, refreshWorkflows, resetToLocalWorkflow],

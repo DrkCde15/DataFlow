@@ -98,7 +98,7 @@ data-flow/
 | POST | `/api/workflows` | cria workflow `{name, nodes, edges}` |
 | GET | `/api/workflows/{id}` | carrega workflow completo |
 | PUT | `/api/workflows/{id}` | atualiza (parcial: aceita só `name`, ou `nodes`/`edges`) |
-| DELETE | `/api/workflows/{id}` | exclui workflow |
+| DELETE | `/api/workflows/{id}` | exclui workflow (remove também arquivos não referenciados por outros) |
 
 Persistência em SQLite (`backend/data/dataflow.db`).
 
