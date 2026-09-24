@@ -8,8 +8,8 @@ conectando nodes no canvas:
 Exemplo: `API → Bronze → Transform → Data Quality → Silver → Gold → PostgreSQL`
 
 Inspirada no conceito visual de ferramentas como o n8n, com identidade própria
-voltada a Data Engineers. A execução de workflows ainda não existe — o foco
-atual é o editor visual + persistência.
+voltada a Data Engineers. O foco atual é o editor visual + persistência +
+execução local de workflows.
 
 ## Stack
 
@@ -49,24 +49,40 @@ App em `http://localhost:5173`.
 ```bash
 npm run dev      # servidor de desenvolvimento
 npm run build    # typecheck (tsc) + build de produção
+npm run test     # vitest (registry, utils, api client)
 npm run lint     # oxlint
 npm run preview  # serve o build de produção
+```
+
+Testes do backend:
+
+```bash
+cd backend
+.venv/bin/python -m pytest -q
 ```
 
 ## Estrutura do projeto
 
 ```
 data-flow/
+├── .github/workflows/       # CI (lint, testes, build, smoke da API)
+├── docs/                    # revisão de engenharia de dados
 ├── backend/
 │   ├── app/
 │   │   ├── main.py            # FastAPI + CORS + lifespan
 │   │   ├── database.py        # conexão e schema SQLite
 │   │   ├── models.py          # schemas Pydantic
 │   │   ├── repository.py      # acesso a dados
+│   │   ├── executor/          # engine (topo sort, handlers, runs)
 │   │   └── routers/
 │   │       ├── health.py      # GET /api/health
-│   │       └── workflows.py   # CRUD /api/workflows
-│   ├── data/                  # dataflow.db (gerado)
+│   │       ├── workflows.py   # CRUD /api/workflows
+│   │       ├── files.py       # upload /api/files
+│   │       ├── connections.py # CRUD /api/connections
+│   │       ├── migrations.py  # POST /api/migrations/*
+│   │       └── runs.py        # execução e histórico
+│   ├── tests/                 # pytest (DB isolado por teste)
+│   ├── data/                  # dataflow.db + uploads (gerado)
 │   ├── requirements.txt
 │   └── .venv/
 │
@@ -78,11 +94,12 @@ data-flow/
         │   ├── sidebar/       # node library (drag & drop)
         │   ├── panels/        # painel de propriedades
         │   ├── layout/        # header, menu de workflows, status bar
+        │   ├── connections/   # modal de gerenciamento de connections
         │   └── icons/         # conjunto de ícones SVG inline
         ├── nodes/             # definições + registry (um arquivo por categoria)
         ├── types/             # tipos compartilhados (WorkflowNode, NodeDefinition…)
         ├── data/              # workflow demo (REST API → Bronze → Silver → Gold)
-        ├── hooks/             # useWorkflow (estado + persistência)
+        ├── hooks/             # useWorkflow (estado + persistência + execução)
         ├── api/               # client HTTP tipado
         ├── utils/             # cores do tema, formatação, dnd
         ├── pages/             # composição da página do editor
@@ -99,12 +116,16 @@ data-flow/
 | GET | `/api/workflows/{id}` | carrega workflow completo |
 | PUT | `/api/workflows/{id}` | atualiza (parcial: aceita só `name`, ou `nodes`/`edges`) |
 | DELETE | `/api/workflows/{id}` | exclui workflow (remove também arquivos não referenciados por outros) |
+| POST | `/api/files` | upload de arquivo (máx. 50MB, retorna `{id, filename, size}`) |
 | GET | `/api/connections` | lista connections (sem o segredo) |
 | POST | `/api/connections` | cria connection `{name, type, connection_string}` |
 | GET | `/api/connections/{id}` | detalhe da connection (sem o segredo) |
 | PUT | `/api/connections/{id}` | atualiza (parcial; segredo em branco mantém o atual) |
 | DELETE | `/api/connections/{id}` | exclui (409 se estiver em uso por workflows) |
 | POST | `/api/migrations/connection-strings` | migra `connection_string` em texto para Connections (`?dry_run=true` só simula) |
+| POST | `/api/workflows/{id}/run` | executa o workflow (salva o resultado como run) |
+| GET | `/api/workflows/{id}/runs` | histórico de runs do workflow |
+| GET | `/api/runs/{run_id}` | detalhe de um run |
 
 Persistência em SQLite (`backend/data/dataflow.db`).
 
@@ -112,7 +133,7 @@ Persistência em SQLite (`backend/data/dataflow.db`).
 
 - Canvas com pan, zoom, minimap, controles, grid
 - Node Library com 5 categorias (Sources, Processing, Data Quality, Storage,
-  Orchestration) — 22 node types, arrastáveis para o canvas
+  Orchestration) — 23 node types, arrastáveis para o canvas
 - Configuração por node type: cada node define um `configSchema` e o painel
   de propriedades renderiza o formulário dinamicamente (texto, select,
   número, textarea, arquivo)
@@ -126,14 +147,34 @@ Persistência em SQLite (`backend/data/dataflow.db`).
 - Excluir node: botão no card, botão no painel ou Backspace/Delete
 - CRUD de workflows na interface (dropdown no header): criar, abrir,
   renomear, excluir; Save grava via API; load automático ao abrir
+- **Execute**: roda o workflow no backend, com status por node no canvas,
+  seção Last run no painel e estado na status bar
 - Indicadores na status bar: API online/offline, nodes, conexões,
-  mudanças não salvas
+  mudanças não salvas, estado do run
+
+## Execução de workflows
+
+O botão **Execute** roda o workflow salvo no backend: os nodes são ordenados
+topologicamente e executados em sequência, com **fail-fast** no primeiro node
+que falhar. Cada node mostra o status no canvas (amarelo/verde/vermelho) e o
+detalhe no painel (linhas, colunas, logs, erro). Runs ficam persistidos
+(`GET /api/workflows/{id}/runs`).
+
+Nodes executáveis hoje: `file` (csv/json), `filter`, `join` (inner/left/right),
+`aggregate`, `null-check`, `duplicate-check`, `schema-validation`,
+`data-freshness`, `rest-api`, `python`, `sql` (SQLite em memória),
+`schedule`/`trigger` (no-op de entrada). Os demais retornam erro claro
+(`"<type>" is not executable yet`).
+
+> O node `python` executa código arbitrário com `exec` — aceitável para uso
+> local single-user, mas nunca exponha a API sem autenticação.
 
 ## O que ainda NÃO existe (próximas etapas)
 
-Execução de workflow, backend de orquestração (Airflow/Spark/dbt/Kafka),
-autenticação, data quality real, data lineage, monitoramento, logs,
-geração de código, integração com cloud.
+Orquestração real (agendamento/condicionais executando de verdade),
+conectores de escrita (PostgreSQL, Parquet, Delta), autenticação, data
+lineage, monitoramento com alertas, geração de código, integração com cloud,
+execução assíncrona/background workers.
 
 ## Node registry
 

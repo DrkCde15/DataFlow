@@ -1,4 +1,4 @@
-import type { ApiStatus, SaveState } from '../../types';
+import type { ApiStatus, RunState, SaveState } from '../../types';
 import './StatusBar.css';
 
 interface StatusBarProps {
@@ -8,6 +8,7 @@ interface StatusBarProps {
   apiStatus: ApiStatus;
   saveState: SaveState;
   isDirty: boolean;
+  runState: RunState;
 }
 
 function getApiLabel(apiStatus: ApiStatus): string {
@@ -18,6 +19,19 @@ function getApiLabel(apiStatus: ApiStatus): string {
     return 'API offline';
   }
   return 'API —';
+}
+
+function getRunLabel(runState: RunState): { label: string; tone: string } | null {
+  if (runState === 'running') {
+    return { label: 'Run: running…', tone: 'warning' };
+  }
+  if (runState === 'succeeded') {
+    return { label: 'Run: succeeded', tone: 'success' };
+  }
+  if (runState === 'failed') {
+    return { label: 'Run: failed', tone: 'danger' };
+  }
+  return null;
 }
 
 function getSaveLabel(
@@ -46,8 +60,10 @@ export function StatusBar({
   apiStatus,
   saveState,
   isDirty,
+  runState,
 }: StatusBarProps) {
   const save = getSaveLabel(saveState, isDirty);
+  const run = getRunLabel(runState);
 
   return (
     <footer className="status-bar">
@@ -69,6 +85,11 @@ export function StatusBar({
         >
           {save.label}
         </span>
+        {run && (
+          <span className={`status-bar__item status-bar__item--${run.tone}`}>
+            {run.label}
+          </span>
+        )}
       </div>
 
       <div className="status-bar__group">

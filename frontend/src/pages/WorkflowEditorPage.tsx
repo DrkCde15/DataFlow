@@ -37,6 +37,10 @@ export function WorkflowEditorPage() {
     createConnection,
     updateConnection,
     deleteConnection,
+    runStatus,
+    lastRun,
+    runState,
+    executeWorkflow,
   } = useWorkflow();
 
   const [isConnectionManagerOpen, setIsConnectionManagerOpen] = useState(false);
@@ -50,8 +54,9 @@ export function WorkflowEditorPage() {
     () => ({
       updateNode: updateNodeConfiguration,
       deleteNode,
+      runStatus,
     }),
-    [updateNodeConfiguration, deleteNode],
+    [updateNodeConfiguration, deleteNode, runStatus],
   );
 
   return (
@@ -61,7 +66,9 @@ export function WorkflowEditorPage() {
         currentWorkflowId={workflowId}
         workflows={workflows}
         saveState={saveState}
+        runState={runState}
         onSave={() => void saveWorkflow()}
+        onExecute={() => void executeWorkflow()}
         onOpenWorkflow={(id) => void openWorkflow(id)}
         onNewWorkflow={createNewWorkflow}
         onRenameWorkflow={(id, name) => void renameWorkflow(id, name)}
@@ -82,6 +89,7 @@ export function WorkflowEditorPage() {
         <PropertiesPanel
           node={selectedNode}
           connections={connections}
+          runResult={selectedNode ? (lastRun?.nodes[selectedNode.id] ?? null) : null}
           onChange={updateNodeConfiguration}
           onDelete={deleteNode}
           onManageConnections={() => setIsConnectionManagerOpen(true)}
@@ -103,6 +111,7 @@ export function WorkflowEditorPage() {
         apiStatus={apiStatus}
         saveState={saveState}
         isDirty={isDirty}
+        runState={runState}
       />
     </div>
   );

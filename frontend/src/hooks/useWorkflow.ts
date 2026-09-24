@@ -19,6 +19,7 @@ import {
   listConnections,
   listWorkflows,
   renameWorkflow as renameWorkflowApi,
+  runWorkflow as runWorkflowApi,
   updateConnection as updateConnectionApi,
   updateWorkflow,
 } from '../api/client';
@@ -30,10 +31,13 @@ import type {
   ConnectionPatch,
   ConnectionSummary,
   NodeConfiguration,
+  RunNodeStatus,
+  RunState,
   SaveState,
   WorkflowEdge,
   WorkflowNode,
   WorkflowRecord,
+  WorkflowRun,
   WorkflowSummary,
 } from '../types';
 
@@ -82,6 +86,10 @@ export interface UseWorkflowResult {
     patch: ConnectionPatch,
   ) => Promise<ConnectionSummary>;
   deleteConnection: (id: string) => Promise<void>;
+  runStatus: Record<string, RunNodeStatus>;
+  lastRun: WorkflowRun | null;
+  runState: RunState;
+  executeWorkflow: () => Promise<void>;
 }
 
 export function useWorkflow(): UseWorkflowResult {
@@ -98,6 +106,16 @@ export function useWorkflow(): UseWorkflowResult {
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [apiStatus, setApiStatus] = useState<ApiStatus>('unknown');
   const [isDirty, setIsDirty] = useState(false);
+  const [runStatus, setRunStatus] = useState<Record<string, RunNodeStatus>>({});
+  const [lastRun, setLastRun] = useState<WorkflowRun | null>(null);
+  const [runState, setRunState] = useState<RunState>('idle');
+
+  const markDirty = useCallback(() => {
+    setIsDirty(true);
+    setRunStatus({});
+    setLastRun(null);
+    setRunState('idle');
+  }, []);
 
   const refreshWorkflows = useCallback(async () => {
     try {
@@ -121,6 +139,9 @@ export function useWorkflow(): UseWorkflowResult {
       setWorkflowName(record.name);
       setIsDirty(false);
       setSaveState('saved');
+      setRunStatus({});
+      setLastRun(null);
+      setRunState('idle');
     },
     [setNodes, setEdges],
   );
@@ -132,6 +153,9 @@ export function useWorkflow(): UseWorkflowResult {
     setWorkflowName('Untitled workflow');
     setSaveState('idle');
     setIsDirty(false);
+    setRunStatus({});
+    setLastRun(null);
+    setRunState('idle');
   }, [setNodes, setEdges]);
 
   const confirmDiscardChanges = useCallback(() => {
@@ -144,26 +168,26 @@ export function useWorkflow(): UseWorkflowResult {
   const handleNodesChange: OnNodesChange<WorkflowNode> = useCallback(
     (changes) => {
       if (changesAffectContent(changes)) {
-        setIsDirty(true);
+        markDirty();
       }
       onNodesChange(changes);
     },
-    [onNodesChange],
+    [onNodesChange, markDirty],
   );
 
   const handleEdgesChange: OnEdgesChange<WorkflowEdge> = useCallback(
     (changes) => {
       if (changesAffectContent(changes)) {
-        setIsDirty(true);
+        markDirty();
       }
       onEdgesChange(changes);
     },
-    [onEdgesChange],
+    [onEdgesChange, markDirty],
   );
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setIsDirty(true);
+      markDirty();
       setEdges((current) =>
         addEdge(
           {
@@ -175,7 +199,7 @@ export function useWorkflow(): UseWorkflowResult {
         ),
       );
     },
-    [setEdges],
+    [setEdges, markDirty],
   );
 
   const addNode = useCallback(
@@ -198,15 +222,15 @@ export function useWorkflow(): UseWorkflowResult {
         },
       };
 
-      setIsDirty(true);
+      markDirty();
       setNodes((current) => [...current, node]);
     },
-    [setNodes],
+    [setNodes, markDirty],
   );
 
   const deleteNode = useCallback(
     (nodeId: string) => {
-      setIsDirty(true);
+      markDirty();
       setNodes((current) => current.filter((node) => node.id !== nodeId));
       setEdges((current) =>
         current.filter(
@@ -214,12 +238,12 @@ export function useWorkflow(): UseWorkflowResult {
         ),
       );
     },
-    [setNodes, setEdges],
+    [setNodes, setEdges, markDirty],
   );
 
   const updateNodeConfiguration = useCallback(
     (nodeId: string, patch: Partial<NodeConfiguration>) => {
-      setIsDirty(true);
+      markDirty();
       setNodes((current) =>
         current.map((node) =>
           node.id === nodeId
@@ -228,7 +252,7 @@ export function useWorkflow(): UseWorkflowResult {
         ),
       );
     },
-    [setNodes],
+    [setNodes, markDirty],
   );
 
   const loadInitialWorkflow = useCallback(async () => {
@@ -248,45 +272,86 @@ export function useWorkflow(): UseWorkflowResult {
     }
   }, [applyRecord]);
 
-  const saveWorkflow = useCallback(async () => {
-    setSaveState('saving');
-
+  const persistCurrent = useCallback(async () => {
     const payload = {
       name: workflowName,
       nodes: sanitizeNodes(nodes),
       edges,
     };
 
-    try {
-      let saved;
+    let saved;
 
-      if (workflowId) {
-        try {
-          saved = await updateWorkflow(workflowId, payload);
-        } catch (error) {
-          if (error instanceof ApiError && error.status === 404) {
-            saved = await createWorkflow(payload);
-          } else {
-            throw error;
-          }
+    if (workflowId) {
+      try {
+        saved = await updateWorkflow(workflowId, payload);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          saved = await createWorkflow(payload);
+        } else {
+          throw error;
         }
-      } else {
-        saved = await createWorkflow(payload);
       }
+    } else {
+      saved = await createWorkflow(payload);
+    }
 
-      setWorkflowId(saved.id);
-      setWorkflowName(saved.name);
-      setApiStatus('online');
-      setIsDirty(false);
-      setSaveState('saved');
-      await refreshWorkflows();
+    setWorkflowId(saved.id);
+    setWorkflowName(saved.name);
+    setApiStatus('online');
+    setIsDirty(false);
+    setSaveState('saved');
+    await refreshWorkflows();
+    return saved;
+  }, [nodes, edges, workflowId, workflowName, refreshWorkflows]);
+
+  const saveWorkflow = useCallback(async () => {
+    setSaveState('saving');
+    try {
+      await persistCurrent();
     } catch (error) {
       if (isServerUnreachable(error)) {
         setApiStatus('offline');
       }
       setSaveState('error');
     }
-  }, [nodes, edges, workflowId, workflowName, refreshWorkflows]);
+  }, [persistCurrent]);
+
+  const executeWorkflow = useCallback(async () => {
+    if (runState === 'running') {
+      return;
+    }
+
+    setRunState('running');
+    setLastRun(null);
+    const pending: Record<string, RunNodeStatus> = {};
+    for (const node of nodes) {
+      pending[node.id] = 'running';
+    }
+    setRunStatus(pending);
+
+    try {
+      let id = workflowId;
+      if (!id || isDirty) {
+        const saved = await persistCurrent();
+        id = saved.id;
+      }
+
+      const run = await runWorkflowApi(id);
+      const status: Record<string, RunNodeStatus> = {};
+      for (const [nodeId, result] of Object.entries(run.nodes)) {
+        status[nodeId] = result.status;
+      }
+      setRunStatus(status);
+      setLastRun(run);
+      setRunState(run.status === 'success' ? 'succeeded' : 'failed');
+      setApiStatus('online');
+    } catch (error) {
+      if (isServerUnreachable(error)) {
+        setApiStatus('offline');
+      }
+      setRunState('failed');
+    }
+  }, [runState, nodes, workflowId, isDirty, persistCurrent]);
 
   const openWorkflow = useCallback(
     async (id: string) => {
@@ -446,5 +511,9 @@ export function useWorkflow(): UseWorkflowResult {
     createConnection,
     updateConnection,
     deleteConnection,
+    runStatus,
+    lastRun,
+    runState,
+    executeWorkflow,
   };
 }

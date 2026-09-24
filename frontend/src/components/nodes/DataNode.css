@@ -45,6 +45,32 @@
     0 10px 24px rgba(0, 0, 0, 0.45);
 }
 
+.wf-node--run-success {
+  border-color: var(--success);
+}
+
+.wf-node--run-failed,
+.wf-node--run-error {
+  border-color: var(--danger);
+}
+
+.wf-node--run-running {
+  border-color: var(--warning);
+  animation: wf-node-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes wf-node-pulse {
+  0%,
+  100% {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--warning) 55%, transparent),
+      0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+}
+
 .wf-node__header {
   display: flex;
   align-items: center;

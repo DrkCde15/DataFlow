@@ -2,16 +2,11 @@ import json
 import sqlite3
 import uuid
 from contextlib import closing
-from datetime import datetime, timezone
 from typing import Any
 
-from .database import UPLOAD_DIR, get_connection
+from .database import get_connection, get_upload_dir, utc_now
 
 WorkflowDict = dict[str, Any]
-
-
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def _parse_workflow(row: sqlite3.Row) -> WorkflowDict:
@@ -60,7 +55,7 @@ def create_workflow(
     name: str, nodes: list[WorkflowDict], edges: list[WorkflowDict]
 ) -> WorkflowDict:
     workflow_id = uuid.uuid4().hex
-    now = _now()
+    now = utc_now()
     with closing(get_connection()) as connection:
         with connection:
             connection.execute(
@@ -101,7 +96,7 @@ def update_workflow(
                     merged_name,
                     json.dumps(merged_nodes),
                     json.dumps(merged_edges),
-                    _now(),
+                    utc_now(),
                     workflow_id,
                 ),
             )
@@ -154,7 +149,7 @@ def delete_workflow(workflow_id: str) -> bool:
 
     for file_id in removed_files - still_used:
         try:
-            (UPLOAD_DIR / file_id).unlink(missing_ok=True)
+            (get_upload_dir() / file_id).unlink(missing_ok=True)
         except OSError:
             pass
 
@@ -193,7 +188,7 @@ def create_connection(
     name: str, type: str, connection_string: str
 ) -> WorkflowDict:
     connection_id = uuid.uuid4().hex
-    now = _now()
+    now = utc_now()
     with closing(get_connection()) as connection:
         with connection:
             connection.execute(
@@ -236,7 +231,7 @@ def update_connection(
                 SET name = ?, type = ?, connection_string = ?, updated_at = ?
                 WHERE id = ?
                 """,
-                (merged_name, merged_type, merged_secret, _now(), connection_id),
+                (merged_name, merged_type, merged_secret, utc_now(), connection_id),
             )
 
     updated = get_connection_record(connection_id)
@@ -269,6 +264,65 @@ def delete_connection(connection_id: str) -> bool:
                 "DELETE FROM connections WHERE id = ?", (connection_id,)
             )
     return cursor.rowcount > 0
+
+
+def _row_to_run(row: sqlite3.Row) -> WorkflowDict:
+    return {
+        "id": row["id"],
+        "workflow_id": row["workflow_id"],
+        "status": row["status"],
+        "started_at": row["started_at"],
+        "finished_at": row["finished_at"],
+        "nodes": json.loads(row["result"]).get("nodes", {}),
+    }
+
+
+def create_run(
+    workflow_id: str,
+    status: str,
+    started_at: str,
+    finished_at: str,
+    result: WorkflowDict,
+) -> WorkflowDict:
+    run_id = uuid.uuid4().hex
+    with closing(get_connection()) as connection:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO runs (id, workflow_id, status, started_at, finished_at, result)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    run_id,
+                    workflow_id,
+                    status,
+                    started_at,
+                    finished_at,
+                    json.dumps(result),
+                ),
+            )
+    created = get_run(run_id)
+    assert created is not None
+    return created
+
+
+def list_runs(workflow_id: str) -> list[WorkflowDict]:
+    with closing(get_connection()) as connection:
+        rows = connection.execute(
+            "SELECT * FROM runs WHERE workflow_id = ? ORDER BY started_at DESC",
+            (workflow_id,),
+        ).fetchall()
+    return [_row_to_run(row) for row in rows]
+
+
+def get_run(run_id: str) -> WorkflowDict | None:
+    with closing(get_connection()) as connection:
+        row = connection.execute(
+            "SELECT * FROM runs WHERE id = ?", (run_id,)
+        ).fetchone()
+    if row is None:
+        return None
+    return _row_to_run(row)
 
 
 NODE_CONNECTION_TYPES = {
@@ -366,7 +420,7 @@ def migrate_connection_strings(dry_run: bool = False) -> WorkflowDict:
                 with connection:
                     connection.execute(
                         "UPDATE workflows SET nodes = ?, updated_at = ? WHERE id = ?",
-                        (json.dumps(nodes), _now(), workflow_id),
+                        (json.dumps(nodes), utc_now(), workflow_id),
                     )
 
     return {

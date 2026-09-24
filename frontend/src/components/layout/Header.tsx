@@ -1,4 +1,4 @@
-import type { SaveState, WorkflowSummary } from '../../types';
+import type { RunState, SaveState, WorkflowSummary } from '../../types';
 import { Icon } from '../icons/Icon';
 import { WorkflowMenu } from './WorkflowMenu';
 import './Header.css';
@@ -8,7 +8,9 @@ interface HeaderProps {
   currentWorkflowId: string | null;
   workflows: WorkflowSummary[];
   saveState: SaveState;
+  runState: RunState;
   onSave: () => void;
+  onExecute: () => void;
   onOpenWorkflow: (id: string) => void;
   onNewWorkflow: () => void;
   onRenameWorkflow: (id: string, name: string) => void;
@@ -20,7 +22,9 @@ export function Header({
   currentWorkflowId,
   workflows,
   saveState,
+  runState,
   onSave,
+  onExecute,
   onOpenWorkflow,
   onNewWorkflow,
   onRenameWorkflow,
@@ -65,11 +69,12 @@ export function Header({
         <button
           type="button"
           className="btn btn--primary"
-          disabled
-          title="Workflow execution is not available yet"
+          disabled={runState === 'running'}
+          onClick={onExecute}
+          title="Run workflow"
         >
           <Icon name="play" size={13} />
-          Execute
+          {runState === 'running' ? 'Running…' : 'Execute'}
         </button>
         <button
           type="button"

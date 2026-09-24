@@ -8,7 +8,7 @@ import { useNodeActions } from './nodeActions';
 import './DataNode.css';
 
 export function DataNode({ id, data, selected }: NodeProps<WorkflowNode>) {
-  const { updateNode, deleteNode } = useNodeActions();
+  const { updateNode, deleteNode, runStatus } = useNodeActions();
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState('');
 
@@ -17,6 +17,8 @@ export function DataNode({ id, data, selected }: NodeProps<WorkflowNode>) {
     ? getCategoryLabel(definition.category)
     : 'Node';
   const statusLabel = STATUS_LABELS[data.status];
+  const run = runStatus[id];
+  const runClass = run ? ` wf-node--run-${run}` : '';
 
   function startEditName() {
     setDraftName(data.name);
@@ -45,7 +47,7 @@ export function DataNode({ id, data, selected }: NodeProps<WorkflowNode>) {
 
   return (
     <div
-      className={`wf-node wf-node--${definition?.category ?? 'sources'}${selected ? ' wf-node--selected' : ''}`}
+      className={`wf-node wf-node--${definition?.category ?? 'sources'}${selected ? ' wf-node--selected' : ''}${runClass}`}
       data-status={data.status}
     >
       <div className="wf-node__header">

@@ -4,6 +4,7 @@ import type {
   ConnectionSummary,
   WorkflowPayload,
   WorkflowRecord,
+  WorkflowRun,
   WorkflowSummary,
 } from '../types';
 
@@ -199,6 +200,37 @@ export async function updateConnection(
 
 export async function deleteConnection(id: string): Promise<void> {
   await request<void>(`/api/connections/${id}`, { method: 'DELETE' });
+}
+
+interface ApiNodeRunResult {
+  status: 'success' | 'failed' | 'error';
+  rows: number;
+  columns: string[];
+  log: string[];
+  error: string | null;
+}
+
+interface ApiWorkflowRun {
+  id: string;
+  workflow_id: string;
+  status: string;
+  started_at: string;
+  finished_at: string;
+  nodes: Record<string, ApiNodeRunResult>;
+}
+
+export async function runWorkflow(id: string): Promise<WorkflowRun> {
+  const raw = await request<ApiWorkflowRun>(`/api/workflows/${id}/run`, {
+    method: 'POST',
+  });
+  return {
+    id: raw.id,
+    workflowId: raw.workflow_id,
+    status: raw.status,
+    startedAt: raw.started_at,
+    finishedAt: raw.finished_at,
+    nodes: raw.nodes,
+  };
 }
 
 export interface UploadedFile {

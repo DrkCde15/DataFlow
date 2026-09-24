@@ -152,3 +152,24 @@ export interface ConnectionPatch {
   type?: string;
   connectionString?: string;
 }
+
+export type RunNodeStatus = 'running' | 'success' | 'failed' | 'error';
+
+export type RunState = 'idle' | 'running' | 'succeeded' | 'failed';
+
+export interface NodeRunResult {
+  status: 'success' | 'failed' | 'error';
+  rows: number;
+  columns: string[];
+  log: string[];
+  error: string | null;
+}
+
+export interface WorkflowRun {
+  id: string;
+  workflowId: string;
+  status: string;
+  startedAt: string;
+  finishedAt: string;
+  nodes: Record<string, NodeRunResult>;
+}

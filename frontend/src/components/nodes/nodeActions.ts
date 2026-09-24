@@ -1,9 +1,10 @@
 import { createContext, useContext } from 'react';
-import type { NodeConfiguration } from '../../types';
+import type { NodeConfiguration, RunNodeStatus } from '../../types';
 
 export interface NodeActions {
   updateNode: (nodeId: string, patch: Partial<NodeConfiguration>) => void;
   deleteNode: (nodeId: string) => void;
+  runStatus: Record<string, RunNodeStatus>;
 }
 
 export const NodeActionsContext = createContext<NodeActions | null>(null);

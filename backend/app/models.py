@@ -78,3 +78,20 @@ class MigrationReport(BaseModel):
     updated_workflows: int
     cleaned_nodes: int
     details: list[MigrationDetail]
+
+
+class RunNodeResult(BaseModel):
+    status: str
+    rows: int
+    columns: list[str] = Field(default_factory=list)
+    log: list[str] = Field(default_factory=list)
+    error: str | None = None
+
+
+class WorkflowRun(BaseModel):
+    id: str
+    workflow_id: str
+    status: str
+    started_at: str
+    finished_at: str
+    nodes: dict[str, RunNodeResult]

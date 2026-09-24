@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from ..database import UPLOAD_DIR
+from ..database import get_upload_dir
 
 MAX_FILE_SIZE = 50 * 1024 * 1024
 
@@ -27,7 +27,8 @@ async def upload_file(file: UploadFile = File(...)) -> UploadedFile:
     file_id = uuid.uuid4().hex
     original_name = Path(file.filename or "upload").name
 
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    (UPLOAD_DIR / file_id).write_bytes(content)
+    upload_dir = get_upload_dir()
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    (upload_dir / file_id).write_bytes(content)
 
     return UploadedFile(id=file_id, filename=original_name, size=len(content))

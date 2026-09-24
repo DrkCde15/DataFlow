@@ -7,6 +7,7 @@ import type {
   ConnectionSummary,
   FileAttachment,
   NodeConfiguration,
+  NodeRunResult,
   NodeStatus,
   WorkflowNode,
 } from '../../types';
@@ -18,6 +19,7 @@ import './PropertiesPanel.css';
 interface PropertiesPanelProps {
   node: WorkflowNode | null;
   connections: ConnectionSummary[];
+  runResult: NodeRunResult | null;
   onChange: (nodeId: string, patch: Partial<NodeConfiguration>) => void;
   onDelete: (nodeId: string) => void;
   onManageConnections: () => void;
@@ -32,6 +34,7 @@ function isFileAttachment(value: ConfigValue): value is FileAttachment {
 export function PropertiesPanel({
   node,
   connections,
+  runResult,
   onChange,
   onDelete,
   onManageConnections,
@@ -360,6 +363,37 @@ export function PropertiesPanel({
             {node.data.nodeType}
           </div>
         </div>
+
+        {runResult && (
+          <div className="properties-panel__config">
+            <span className="properties-panel__section-label">Last run</span>
+            <div
+              className="run-result"
+              data-run-status={runResult.status}
+            >
+              <div className="run-result__row">
+                <span className="run-result__dot" />
+                <span className="run-result__status">{runResult.status}</span>
+                <span className="run-result__rows">
+                  {runResult.rows} {runResult.rows === 1 ? 'row' : 'rows'}
+                </span>
+              </div>
+              {runResult.columns.length > 0 && (
+                <div className="run-result__columns">
+                  {runResult.columns.join(', ')}
+                </div>
+              )}
+              {runResult.error && (
+                <div className="run-result__error">{runResult.error}</div>
+              )}
+              {runResult.log.map((line, index) => (
+                <div key={index} className="run-result__log">
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <button
           type="button"
