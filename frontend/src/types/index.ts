@@ -164,6 +164,7 @@ export interface NodeRunResult {
   status: 'success' | 'failed' | 'error';
   rows: number;
   columns: string[];
+  preview: Record<string, unknown>[];
   log: string[];
   error: string | null;
 }

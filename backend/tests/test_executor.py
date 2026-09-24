@@ -112,11 +112,19 @@ def test_file_missing_attachment_fails():
 
 
 def test_file_unsupported_format_fails(upload_dir):
+    attachment = write_csv(upload_dir, "a.avro", "x")
+    nodes = [node("f", "file", {"file": attachment, "format": "avro"})]
+    result = engine.run_workflow(nodes, [])
+    assert result["status"] == "failed"
+    assert "not readable yet" in (result["nodes"]["f"]["error"] or "")
+
+
+def test_file_broken_parquet_fails_clearly(upload_dir):
     attachment = write_csv(upload_dir, "a.parquet", "x")
     nodes = [node("f", "file", {"file": attachment, "format": "parquet"})]
     result = engine.run_workflow(nodes, [])
     assert result["status"] == "failed"
-    assert "not readable yet" in (result["nodes"]["f"]["error"] or "")
+    assert "cannot read parquet" in (result["nodes"]["f"]["error"] or "")
 
 
 def csv_pipeline(upload_dir, text="id,amount\n1,150\n2,40\n3,200\n"):

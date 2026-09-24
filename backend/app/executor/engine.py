@@ -2,9 +2,16 @@ from typing import Any
 
 from .. import repository
 from .graph import CycleError, topological_order
-from .handlers import NodeError, NodeFailedError, execute_node
+from .handlers import (
+    NodeError,
+    NodeFailedError,
+    execute_node,
+    normalize_rows,
+)
 
 Node = dict[str, Any]
+
+PREVIEW_LIMIT = 100
 
 
 def _columns(rows: list[dict[str, Any]]) -> list[str]:
@@ -82,10 +89,12 @@ def _execute(
             rows, log = execute_node(
                 node, inputs, lambda wid: run_subworkflow(wid, stack)
             )
+            rows = normalize_rows(rows)
             results[node_id] = {
                 "status": "success",
                 "rows": len(rows),
                 "columns": _columns(rows),
+                "preview": rows[:PREVIEW_LIMIT],
                 "log": log,
                 "error": None,
             }

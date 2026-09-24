@@ -34,6 +34,16 @@ function isFileAttachment(value: ConfigValue): value is FileAttachment {
   return typeof value === 'object' && value !== null && 'id' in value;
 }
 
+function formatCell(value: unknown): string {
+  if (value === null || value === undefined || value === '') {
+    return '—';
+  }
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
 export function PropertiesPanel({
   node,
   connections,
@@ -416,6 +426,32 @@ export function PropertiesPanel({
               {runResult.columns.length > 0 && (
                 <div className="run-result__columns">
                   {runResult.columns.join(', ')}
+                </div>
+              )}
+              {(runResult.preview ?? []).length > 0 && (
+                <div className="run-result__table-wrap">
+                  <table className="run-result__table">
+                    <thead>
+                      <tr>
+                        {runResult.columns.map((column) => (
+                          <th key={column}>{column}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(runResult.preview ?? []).slice(0, 20).map((row, index) => (
+                        <tr key={index}>
+                          {runResult.columns.map((column) => (
+                            <td key={column}>{formatCell(row[column])}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="run-result__more">
+                    Showing {Math.min(20, (runResult.preview ?? []).length)} of{' '}
+                    {runResult.rows} rows
+                  </div>
                 </div>
               )}
               {runResult.error && (

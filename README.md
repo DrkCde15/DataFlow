@@ -16,7 +16,7 @@ execução local de workflows.
 | Parte | Tecnologia |
 |---|---|
 | Frontend | React + TypeScript + Vite + React Flow (`@xyflow/react`) + CSS moderno (dark mode) |
-| Backend | Python + FastAPI + SQLite |
+| Backend | Python + FastAPI + SQLite + pandas/pyarrow + psycopg |
 
 ## Como rodar
 
@@ -31,7 +31,30 @@ python3 -m venv .venv
 
 API em `http://localhost:8000` (docs em `/docs`).
 
-### 2. Frontend
+O backend guarda tudo em `backend/data/` (SQLite + uploads). Para usar outro
+diretório (ex.: testes ou deploy):
+
+```bash
+DATAFLOW_DATA_DIR=/caminho/para/dados .venv/bin/uvicorn app.main:app --port 8000
+```
+
+### PostgreSQL local (opcional, via Podman)
+
+```bash
+podman run -d --name dataflow-postgres --restart unless-stopped \
+  -e POSTGRES_USER=dataflow -e POSTGRES_PASSWORD=dataflow123 \
+  -e POSTGRES_DB=dataflow -p 5432:5432 \
+  -v dataflow-pgdata:/var/lib/postgresql/data \
+  docker.io/library/postgres:16
+```
+
+Depois crie uma Connection no app (tipo PostgreSQL) com a URL:
+
+```
+postgresql://dataflow:dataflow123@localhost:5432/dataflow
+```
+
+E selecione-a nos nodes PostgreSQL. O segredo fica só no backend.
 
 ```bash
 cd frontend
@@ -162,20 +185,44 @@ que falhar. Cada node mostra o status no canvas (amarelo/verde/vermelho) e o
 detalhe no painel (linhas, colunas, logs, erro). Runs ficam persistidos
 (`GET /api/workflows/{id}/runs`).
 
-Nodes executáveis hoje: `file` (csv/json), `filter`, `join` (inner/left/right),
+Nodes executáveis hoje: `file` (csv/json/parquet), `filter`, `join` (inner/left/right),
 `aggregate`, `null-check`, `duplicate-check`, `schema-validation`,
 `data-freshness`, `rest-api`, `python`, `sql` (SQLite em memória),
-`workflow-call` (executa outro workflow; saída = linhas dos sinks),
-`schedule`/`trigger` (no-op de entrada). Os demais retornam erro claro
-(`"<type>" is not executable yet`).
+`pyspark` (via `spark-submit`), `postgres-source` (SELECT), `postgres-storage`
+(cria tabela + insere), `parquet` (escrita), `workflow-call` (executa outro
+workflow; saída = linhas dos sinks), `schedule`/`trigger` (no-op de entrada).
+Os demais retornam erro claro (`"<type>" is not executable yet`).
+
+Cada node de sucesso guarda um **preview** (até 100 linhas) visível em tabela
+no painel de propriedades. Credenciais PostgreSQL vêm de Connections
+(`connection_id`) — nunca do payload.
 
 > O node `python` executa código arbitrário com `exec` — aceitável para uso
 > local single-user, mas nunca exponha a API sem autenticação.
 
+### PySpark via spark-submit
+
+O node `pyspark` não embute o Spark: o DataFlow atua como orquestrador.
+
+Pré-requisitos na máquina do backend: **Java + Apache Spark** (`spark-submit`
+no `PATH`). Sem eles, o node falha com instrução clara.
+
+Contrato do código (variáveis disponíveis):
+
+```python
+df = df.filter(df.amount > 100)  # df: Spark DataFrame de entrada (ou None)
+# spark: SparkSession ativa
+# ao final, df precisa ser um DataFrame — ele é gravado em parquet e
+# lido de volta como linhas para os próximos nodes
+```
+
+Campos do node: `code`, `master` (padrão `local[*]` — aponte para um cluster
+de verdade quando precisar) e `timeout_seconds` (padrão 300).
+
 ## O que ainda NÃO existe (próximas etapas)
 
 Orquestração real (agendamento/condicionais executando de verdade),
-conectores de escrita (PostgreSQL, Parquet, Delta), autenticação, data
+conectores restantes (MySQL, Delta Lake, Data Warehouse), autenticação, data
 lineage, monitoramento com alertas, geração de código, integração com cloud,
 execução assíncrona/background workers.
 

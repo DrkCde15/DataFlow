@@ -19,6 +19,15 @@ def data_dir(tmp_path, monkeypatch):
     return tmp_path
 
 
+@pytest.fixture()
+def upload_dir(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATAFLOW_DATA_DIR", str(tmp_path))
+    init_db()
+    target = tmp_path / "uploads"
+    target.mkdir(parents=True, exist_ok=True)
+    return target
+
+
 def workflow_payload(name="wf", nodes=None, edges=None):
     return {
         "name": name,

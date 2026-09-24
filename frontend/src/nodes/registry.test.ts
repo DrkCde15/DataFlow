@@ -55,4 +55,13 @@ describe('node registry', () => {
     if (!file) return;
     expect(buildDefaultConfig(file).file).toBeNull();
   });
+
+  it('defaults pyspark master and timeout', () => {
+    const pyspark = getNodeDefinition('pyspark');
+    expect(pyspark).toBeDefined();
+    if (!pyspark) return;
+    const config = buildDefaultConfig(pyspark);
+    expect(config.master).toBe('local[*]');
+    expect(config.timeout_seconds).toBe(300);
+  });
 });

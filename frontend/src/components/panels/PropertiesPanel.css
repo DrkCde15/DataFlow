@@ -315,6 +315,55 @@
   color: var(--text-muted);
 }
 
+.run-result__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.run-result__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.run-result__table th,
+.run-result__table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.run-result__table thead th {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.run-result__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.run-result__table tbody td {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.run-result__more {
+  padding: 5px 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+}
+
 .connection-field {
   display: flex;
   gap: 8px;

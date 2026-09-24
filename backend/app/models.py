@@ -84,6 +84,7 @@ class RunNodeResult(BaseModel):
     status: str
     rows: int
     columns: list[str] = Field(default_factory=list)
+    preview: list[dict[str, Any]] = Field(default_factory=list)
     log: list[str] = Field(default_factory=list)
     error: str | None = None
 
