@@ -15,6 +15,14 @@ CREATE TABLE IF NOT EXISTS workflows (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS connections (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    connection_string TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 
@@ -27,5 +35,4 @@ def get_connection() -> sqlite3.Connection:
 
 def init_db() -> None:
     with closing(get_connection()) as connection:
-        with connection:
-            connection.execute(SCHEMA)
+        connection.executescript(SCHEMA)

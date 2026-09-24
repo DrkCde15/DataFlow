@@ -1,4 +1,7 @@
 import type {
+  ConnectionInput,
+  ConnectionPatch,
+  ConnectionSummary,
   WorkflowPayload,
   WorkflowRecord,
   WorkflowSummary,
@@ -50,7 +53,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, `Request failed: ${response.status}`);
+    let message = `Request failed: ${response.status}`;
+    const contentType = response.headers.get('content-type') ?? '';
+    if (contentType.includes('application/json')) {
+      const body = (await response.json()) as { detail?: unknown };
+      if (typeof body.detail === 'string' && body.detail) {
+        message = body.detail;
+      }
+    }
+    throw new ApiError(response.status, message);
   }
 
   if (response.status === 204) {
@@ -126,6 +137,68 @@ export async function renameWorkflow(
 
 export async function deleteWorkflow(id: string): Promise<void> {
   await request<void>(`/api/workflows/${id}`, { method: 'DELETE' });
+}
+
+interface ApiConnectionSummary {
+  id: string;
+  name: string;
+  type: string;
+  created_at: string;
+  updated_at: string;
+}
+
+function toConnectionSummary(raw: ApiConnectionSummary): ConnectionSummary {
+  return {
+    id: raw.id,
+    name: raw.name,
+    type: raw.type,
+    createdAt: raw.created_at,
+    updatedAt: raw.updated_at,
+  };
+}
+
+export async function listConnections(): Promise<ConnectionSummary[]> {
+  const raw = await request<ApiConnectionSummary[]>('/api/connections');
+  return raw.map(toConnectionSummary);
+}
+
+export async function createConnection(
+  input: ConnectionInput,
+): Promise<ConnectionSummary> {
+  const raw = await request<ApiConnectionSummary>('/api/connections', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: input.name,
+      type: input.type,
+      connection_string: input.connectionString,
+    }),
+  });
+  return toConnectionSummary(raw);
+}
+
+export async function updateConnection(
+  id: string,
+  patch: ConnectionPatch,
+): Promise<ConnectionSummary> {
+  const body: Record<string, string> = {};
+  if (patch.name !== undefined) {
+    body.name = patch.name;
+  }
+  if (patch.type !== undefined) {
+    body.type = patch.type;
+  }
+  if (patch.connectionString !== undefined) {
+    body.connection_string = patch.connectionString;
+  }
+  const raw = await request<ApiConnectionSummary>(`/api/connections/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+  return toConnectionSummary(raw);
+}
+
+export async function deleteConnection(id: string): Promise<void> {
+  await request<void>(`/api/connections/${id}`, { method: 'DELETE' });
 }
 
 export interface UploadedFile {

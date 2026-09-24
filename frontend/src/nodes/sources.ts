@@ -94,10 +94,10 @@ export const sourceNodes: NodeDefinition[] = [
     icon: 'database',
     configSchema: [
       {
-        key: 'connection_string',
+        key: 'connection_id',
         label: 'Connection',
-        type: 'text',
-        placeholder: 'postgresql://user:pass@host:5432/db',
+        type: 'connection',
+        connectionType: 'postgres',
         required: true,
       },
       {
@@ -117,10 +117,10 @@ export const sourceNodes: NodeDefinition[] = [
     icon: 'server',
     configSchema: [
       {
-        key: 'connection_string',
+        key: 'connection_id',
         label: 'Connection',
-        type: 'text',
-        placeholder: 'mysql://user:pass@host:3306/db',
+        type: 'connection',
+        connectionType: 'mysql',
         required: true,
       },
       {

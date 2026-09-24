@@ -9,7 +9,13 @@ export type NodeCategory =
 
 export type NodeStatus = 'ready' | 'draft' | 'error' | 'disabled';
 
-export type ConfigFieldType = 'text' | 'textarea' | 'number' | 'select' | 'file';
+export type ConfigFieldType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'select'
+  | 'file'
+  | 'connection';
 
 export interface ConfigFieldOption {
   value: string;
@@ -25,6 +31,7 @@ export interface ConfigField {
   defaultValue?: string | number;
   required?: boolean;
   accept?: string;
+  connectionType?: string;
 }
 
 export interface FileAttachment {
@@ -124,4 +131,24 @@ export interface WorkflowPayload {
   name: string;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
+}
+
+export interface ConnectionSummary {
+  id: string;
+  name: string;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConnectionInput {
+  name: string;
+  type: string;
+  connectionString?: string;
+}
+
+export interface ConnectionPatch {
+  name?: string;
+  type?: string;
+  connectionString?: string;
 }

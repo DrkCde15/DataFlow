@@ -10,18 +10,25 @@ import {
 } from '@xyflow/react';
 import {
   ApiError,
+  createConnection as createConnectionApi,
   createWorkflow,
+  deleteConnection as deleteConnectionApi,
   deleteWorkflow as deleteWorkflowApi,
   fetchWorkflow,
   isServerUnreachable,
+  listConnections,
   listWorkflows,
   renameWorkflow as renameWorkflowApi,
+  updateConnection as updateConnectionApi,
   updateWorkflow,
 } from '../api/client';
 import { DEMO_WORKFLOW_NAME, demoEdges, demoNodes } from '../data/demoWorkflow';
 import { buildDefaultConfig, getNodeDefinition } from '../nodes/registry';
 import type {
   ApiStatus,
+  ConnectionInput,
+  ConnectionPatch,
+  ConnectionSummary,
   NodeConfiguration,
   SaveState,
   WorkflowEdge,
@@ -67,6 +74,14 @@ export interface UseWorkflowResult {
   createNewWorkflow: () => void;
   renameWorkflow: (id: string, name: string) => Promise<void>;
   deleteWorkflow: (id: string) => Promise<void>;
+  connections: ConnectionSummary[];
+  refreshConnections: () => Promise<void>;
+  createConnection: (input: ConnectionInput) => Promise<ConnectionSummary>;
+  updateConnection: (
+    id: string,
+    patch: ConnectionPatch,
+  ) => Promise<ConnectionSummary>;
+  deleteConnection: (id: string) => Promise<void>;
 }
 
 export function useWorkflow(): UseWorkflowResult {
@@ -79,6 +94,7 @@ export function useWorkflow(): UseWorkflowResult {
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [workflowName, setWorkflowName] = useState(DEMO_WORKFLOW_NAME);
   const [workflows, setWorkflows] = useState<WorkflowSummary[]>([]);
+  const [connections, setConnections] = useState<ConnectionSummary[]>([]);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [apiStatus, setApiStatus] = useState<ApiStatus>('unknown');
   const [isDirty, setIsDirty] = useState(false);
@@ -339,6 +355,68 @@ export function useWorkflow(): UseWorkflowResult {
     [workflowId, confirmDiscardChanges, refreshWorkflows, resetToLocalWorkflow],
   );
 
+  const refreshConnections = useCallback(async () => {
+    try {
+      const list = await listConnections();
+      setConnections(list);
+      setApiStatus('online');
+    } catch (error) {
+      if (isServerUnreachable(error)) {
+        setApiStatus('offline');
+      }
+    }
+  }, []);
+
+  const createConnection = useCallback(
+    async (input: ConnectionInput) => {
+      try {
+        const created = await createConnectionApi(input);
+        setApiStatus('online');
+        await refreshConnections();
+        return created;
+      } catch (error) {
+        if (isServerUnreachable(error)) {
+          setApiStatus('offline');
+        }
+        throw error;
+      }
+    },
+    [refreshConnections],
+  );
+
+  const updateConnection = useCallback(
+    async (id: string, patch: ConnectionPatch) => {
+      try {
+        const updated = await updateConnectionApi(id, patch);
+        setApiStatus('online');
+        await refreshConnections();
+        return updated;
+      } catch (error) {
+        if (isServerUnreachable(error)) {
+          setApiStatus('offline');
+        }
+        throw error;
+      }
+    },
+    [refreshConnections],
+  );
+
+  const deleteConnection = useCallback(
+    async (id: string) => {
+      try {
+        await deleteConnectionApi(id);
+        setApiStatus('online');
+        await refreshConnections();
+      } catch (error) {
+        if (isServerUnreachable(error)) {
+          setApiStatus('offline');
+        }
+        throw error;
+      }
+    },
+    [refreshConnections],
+  );
+
   const selectedNode = nodes.find((node) => node.selected) ?? null;
 
   return {
@@ -363,5 +441,10 @@ export function useWorkflow(): UseWorkflowResult {
     createNewWorkflow,
     renameWorkflow,
     deleteWorkflow,
+    connections,
+    refreshConnections,
+    createConnection,
+    updateConnection,
+    deleteConnection,
   };
 }

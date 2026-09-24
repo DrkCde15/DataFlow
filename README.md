@@ -99,6 +99,12 @@ data-flow/
 | GET | `/api/workflows/{id}` | carrega workflow completo |
 | PUT | `/api/workflows/{id}` | atualiza (parcial: aceita só `name`, ou `nodes`/`edges`) |
 | DELETE | `/api/workflows/{id}` | exclui workflow (remove também arquivos não referenciados por outros) |
+| GET | `/api/connections` | lista connections (sem o segredo) |
+| POST | `/api/connections` | cria connection `{name, type, connection_string}` |
+| GET | `/api/connections/{id}` | detalhe da connection (sem o segredo) |
+| PUT | `/api/connections/{id}` | atualiza (parcial; segredo em branco mantém o atual) |
+| DELETE | `/api/connections/{id}` | exclui (409 se estiver em uso por workflows) |
+| POST | `/api/migrations/connection-strings` | migra `connection_string` em texto para Connections (`?dry_run=true` só simula) |
 
 Persistência em SQLite (`backend/data/dataflow.db`).
 
@@ -112,6 +118,9 @@ Persistência em SQLite (`backend/data/dataflow.db`).
   número, textarea, arquivo)
 - Node **File** (Sources): importe um arquivo local — o upload vai para o
   backend (`POST /api/files`, máx. 50MB) e a referência fica na config do node
+- **Connections**: credenciais (PostgreSQL, MySQL, Warehouse) gerenciadas em
+  entidade separada (`/api/connections`) — o segredo nunca volta na API e os
+  nodes guardam só o `connection_id`; exclusão bloqueada (409) se estiver em uso
 - Conexões entre nodes (criar, selecionar, apagar)
 - Editar node: rename inline no card, name/description/status no painel
 - Excluir node: botão no card, botão no painel ou Backspace/Delete

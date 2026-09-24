@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { WorkflowCanvas } from '../components/canvas/WorkflowCanvas';
+import { ConnectionManager } from '../components/connections/ConnectionManager';
 import { Header } from '../components/layout/Header';
 import { StatusBar } from '../components/layout/StatusBar';
 import { NodeActionsContext } from '../components/nodes/nodeActions';
@@ -31,11 +32,19 @@ export function WorkflowEditorPage() {
     createNewWorkflow,
     renameWorkflow,
     deleteWorkflow,
+    connections,
+    refreshConnections,
+    createConnection,
+    updateConnection,
+    deleteConnection,
   } = useWorkflow();
+
+  const [isConnectionManagerOpen, setIsConnectionManagerOpen] = useState(false);
 
   useEffect(() => {
     void loadInitialWorkflow();
-  }, [loadInitialWorkflow]);
+    void refreshConnections();
+  }, [loadInitialWorkflow, refreshConnections]);
 
   const nodeActions = useMemo(
     () => ({
@@ -72,10 +81,21 @@ export function WorkflowEditorPage() {
         </NodeActionsContext.Provider>
         <PropertiesPanel
           node={selectedNode}
+          connections={connections}
           onChange={updateNodeConfiguration}
           onDelete={deleteNode}
+          onManageConnections={() => setIsConnectionManagerOpen(true)}
         />
       </div>
+      {isConnectionManagerOpen && (
+        <ConnectionManager
+          connections={connections}
+          onClose={() => setIsConnectionManagerOpen(false)}
+          onCreate={(input) => createConnection(input)}
+          onUpdate={(id, patch) => updateConnection(id, patch)}
+          onDelete={(id) => deleteConnection(id)}
+        />
+      )}
       <StatusBar
         nodeCount={nodes.length}
         edgeCount={edges.length}

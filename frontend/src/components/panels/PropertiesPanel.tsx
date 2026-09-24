@@ -4,6 +4,7 @@ import { getCategoryLabel, getNodeDefinition } from '../../nodes/registry';
 import type {
   ConfigField,
   ConfigValue,
+  ConnectionSummary,
   FileAttachment,
   NodeConfiguration,
   NodeStatus,
@@ -16,8 +17,10 @@ import './PropertiesPanel.css';
 
 interface PropertiesPanelProps {
   node: WorkflowNode | null;
+  connections: ConnectionSummary[];
   onChange: (nodeId: string, patch: Partial<NodeConfiguration>) => void;
   onDelete: (nodeId: string) => void;
+  onManageConnections: () => void;
 }
 
 const STATUS_OPTIONS = Object.keys(STATUS_LABELS) as NodeStatus[];
@@ -26,7 +29,13 @@ function isFileAttachment(value: ConfigValue): value is FileAttachment {
   return typeof value === 'object' && value !== null && 'id' in value;
 }
 
-export function PropertiesPanel({ node, onChange, onDelete }: PropertiesPanelProps) {
+export function PropertiesPanel({
+  node,
+  connections,
+  onChange,
+  onDelete,
+  onManageConnections,
+}: PropertiesPanelProps) {
   const [uploading, setUploading] = useState<{
     nodeId: string;
     key: string;
@@ -146,9 +155,49 @@ export function PropertiesPanel({ node, onChange, onDelete }: PropertiesPanelPro
     );
   }
 
+  function renderConnectionField(field: ConfigField) {
+    const options = connections.filter(
+      (connection) =>
+        !field.connectionType || connection.type === field.connectionType,
+    );
+    const rawValue = config[field.key];
+    const value = typeof rawValue === 'string' ? rawValue : '';
+
+    return (
+      <div className="connection-field">
+        <select
+          id={`config-${field.key}`}
+          className="field__select connection-field__select"
+          value={value}
+          onChange={(event) =>
+            setConfigValue(field.key, event.target.value || null)
+          }
+        >
+          <option value="">Select a connection…</option>
+          {options.map((connection) => (
+            <option key={connection.id} value={connection.id}>
+              {connection.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="connection-field__manage"
+          onClick={onManageConnections}
+        >
+          Manage
+        </button>
+      </div>
+    );
+  }
+
   function renderConfigField(field: ConfigField) {
     if (field.type === 'file') {
       return renderFileField(field);
+    }
+
+    if (field.type === 'connection') {
+      return renderConnectionField(field);
     }
 
     if (field.type === 'textarea') {

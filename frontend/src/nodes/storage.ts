@@ -9,10 +9,10 @@ export const storageNodes: NodeDefinition[] = [
     icon: 'database',
     configSchema: [
       {
-        key: 'connection_string',
+        key: 'connection_id',
         label: 'Connection',
-        type: 'text',
-        placeholder: 'postgresql://user:pass@host:5432/db',
+        type: 'connection',
+        connectionType: 'postgres',
         required: true,
       },
       {
@@ -70,10 +70,10 @@ export const storageNodes: NodeDefinition[] = [
     icon: 'data-warehouse',
     configSchema: [
       {
-        key: 'connection_string',
+        key: 'connection_id',
         label: 'Connection',
-        type: 'text',
-        placeholder: 'snowflake://user:pass@account',
+        type: 'connection',
+        connectionType: 'warehouse',
         required: true,
       },
       {
