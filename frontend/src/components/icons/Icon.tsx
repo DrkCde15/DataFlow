@@ -159,6 +159,15 @@ const iconPaths: Record<IconName, ReactNode> = {
   ),
   play: <polygon points="6 3 20 12 6 21 6 3" />,
   'chevron-down': <path d="m6 9 6 6 6-6" />,
+  'chevron-left': <path d="m15 18-6-6 6-6" />,
+  workflow: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      <path d="M10 6.5h4v4" />
+      <path d="m14 6.5-2.5 2.5" />
+    </>
+  ),
   pencil: <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />,
   trash: (
     <>

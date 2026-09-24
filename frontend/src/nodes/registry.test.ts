@@ -9,8 +9,8 @@ import {
 } from './registry';
 
 describe('node registry', () => {
-  it('registers 23 node types with unique ids', () => {
-    expect(ALL_NODE_DEFINITIONS).toHaveLength(23);
+  it('registers 24 node types with unique ids', () => {
+    expect(ALL_NODE_DEFINITIONS).toHaveLength(24);
     const types = ALL_NODE_DEFINITIONS.map((d) => d.type);
     expect(new Set(types).size).toBe(types.length);
   });

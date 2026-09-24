@@ -56,4 +56,19 @@ export const orchestrationNodes: NodeDefinition[] = [
       },
     ],
   },
+  {
+    type: 'workflow-call',
+    label: 'Workflow',
+    category: 'orchestration',
+    description: 'Run another workflow',
+    icon: 'workflow',
+    configSchema: [
+      {
+        key: 'workflow_id',
+        label: 'Workflow',
+        type: 'workflow',
+        required: true,
+      },
+    ],
+  },
 ];

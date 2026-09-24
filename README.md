@@ -131,9 +131,11 @@ Persistência em SQLite (`backend/data/dataflow.db`).
 
 ## Funcionalidades atuais
 
+- **Home**: tela inicial com cards dos workflows (abrir, criar, renomear,
+  excluir, busca) + botão de demo
 - Canvas com pan, zoom, minimap, controles, grid
 - Node Library com 5 categorias (Sources, Processing, Data Quality, Storage,
-  Orchestration) — 23 node types, arrastáveis para o canvas
+  Orchestration) — 24 node types, arrastáveis para o canvas
 - Configuração por node type: cada node define um `configSchema` e o painel
   de propriedades renderiza o formulário dinamicamente (texto, select,
   número, textarea, arquivo)
@@ -163,6 +165,7 @@ detalhe no painel (linhas, colunas, logs, erro). Runs ficam persistidos
 Nodes executáveis hoje: `file` (csv/json), `filter`, `join` (inner/left/right),
 `aggregate`, `null-check`, `duplicate-check`, `schema-validation`,
 `data-freshness`, `rest-api`, `python`, `sql` (SQLite em memória),
+`workflow-call` (executa outro workflow; saída = linhas dos sinks),
 `schedule`/`trigger` (no-op de entrada). Os demais retornam erro claro
 (`"<type>" is not executable yet`).
 

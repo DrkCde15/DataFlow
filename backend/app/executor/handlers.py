@@ -590,6 +590,18 @@ def handle_entry(node: Node, inputs: list[Dataset]) -> tuple[Dataset, list[str]]
     return [], [f"'{_node_name(node)}' is an entry point (no-op)"]
 
 
+def handle_workflow_call(
+    node: Node, _inputs: list[Dataset], run_subworkflow
+) -> tuple[Dataset, list[str]]:
+    workflow_id = str(_config(node, "workflow_id") or "").strip()
+    if not workflow_id:
+        raise NodeError("no workflow selected")
+    if run_subworkflow is None:
+        raise NodeError("sub-workflows are not supported here")
+    rows, log = run_subworkflow(workflow_id)
+    return rows, [log]
+
+
 HANDLERS = {
     "file": handle_file,
     "filter": handle_filter,
@@ -607,8 +619,12 @@ HANDLERS = {
 }
 
 
-def execute_node(node: Node, inputs: list[Dataset]) -> tuple[Dataset, list[str]]:
+def execute_node(
+    node: Node, inputs: list[Dataset], run_subworkflow=None
+) -> tuple[Dataset, list[str]]:
     node_type = str(node.get("type") or "")
+    if node_type == "workflow-call":
+        return handle_workflow_call(node, inputs, run_subworkflow)
     handler = HANDLERS.get(node_type)
     if handler is None:
         raise UnsupportedNodeError(f"node type '{node_type}' is not executable yet")

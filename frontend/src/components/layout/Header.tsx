@@ -1,54 +1,44 @@
-import type { RunState, SaveState, WorkflowSummary } from '../../types';
+import type { RunState, SaveState } from '../../types';
 import { Icon } from '../icons/Icon';
-import { WorkflowMenu } from './WorkflowMenu';
 import './Header.css';
 
 interface HeaderProps {
   workflowName: string;
-  currentWorkflowId: string | null;
-  workflows: WorkflowSummary[];
   saveState: SaveState;
   runState: RunState;
+  onBack: () => void;
   onSave: () => void;
   onExecute: () => void;
-  onOpenWorkflow: (id: string) => void;
-  onNewWorkflow: () => void;
-  onRenameWorkflow: (id: string, name: string) => void;
-  onDeleteWorkflow: (id: string) => void;
 }
 
 export function Header({
   workflowName,
-  currentWorkflowId,
-  workflows,
   saveState,
   runState,
+  onBack,
   onSave,
   onExecute,
-  onOpenWorkflow,
-  onNewWorkflow,
-  onRenameWorkflow,
-  onDeleteWorkflow,
 }: HeaderProps) {
   const isSaving = saveState === 'saving';
 
   return (
     <header className="app-header">
       <div className="app-header__brand">
+        <button
+          type="button"
+          className="btn btn--icon"
+          onClick={onBack}
+          aria-label="All workflows"
+          title="All workflows"
+        >
+          <Icon name="chevron-left" size={15} />
+        </button>
         <span className="app-header__logo">
           <Icon name="logo" size={18} />
         </span>
         <span className="app-header__product">DataFlow</span>
         <span className="app-header__divider" />
-        <WorkflowMenu
-          workflowName={workflowName}
-          currentWorkflowId={currentWorkflowId}
-          workflows={workflows}
-          onOpen={onOpenWorkflow}
-          onNew={onNewWorkflow}
-          onRename={onRenameWorkflow}
-          onDelete={onDeleteWorkflow}
-        />
+        <span className="app-header__workflow">{workflowName}</span>
       </div>
 
       <div className="app-header__actions">

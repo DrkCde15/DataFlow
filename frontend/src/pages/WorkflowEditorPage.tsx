@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { WorkflowCanvas } from '../components/canvas/WorkflowCanvas';
 import { ConnectionManager } from '../components/connections/ConnectionManager';
 import { Header } from '../components/layout/Header';
@@ -9,12 +9,16 @@ import { NodeLibrary } from '../components/sidebar/NodeLibrary';
 import { useWorkflow } from '../hooks/useWorkflow';
 import './WorkflowEditorPage.css';
 
-export function WorkflowEditorPage() {
+interface WorkflowEditorPageProps {
+  workflowId: string | null;
+  onBack: () => void;
+}
+
+export function WorkflowEditorPage({ workflowId, onBack }: WorkflowEditorPageProps) {
   const {
     nodes,
     edges,
     selectedNode,
-    workflowId,
     workflowName,
     workflows,
     saveState,
@@ -26,12 +30,10 @@ export function WorkflowEditorPage() {
     addNode,
     deleteNode,
     updateNodeConfiguration,
-    loadInitialWorkflow,
     saveWorkflow,
     openWorkflow,
     createNewWorkflow,
-    renameWorkflow,
-    deleteWorkflow,
+    refreshWorkflows,
     connections,
     refreshConnections,
     createConnection,
@@ -44,11 +46,22 @@ export function WorkflowEditorPage() {
   } = useWorkflow();
 
   const [isConnectionManagerOpen, setIsConnectionManagerOpen] = useState(false);
+  const initializedFor = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
-    void loadInitialWorkflow();
+    if (initializedFor.current === workflowId) {
+      return;
+    }
+    initializedFor.current = workflowId;
+
+    if (workflowId) {
+      void openWorkflow(workflowId);
+    } else {
+      createNewWorkflow();
+    }
+    void refreshWorkflows();
     void refreshConnections();
-  }, [loadInitialWorkflow, refreshConnections]);
+  });
 
   const nodeActions = useMemo(
     () => ({
@@ -63,16 +76,11 @@ export function WorkflowEditorPage() {
     <div className="workflow-editor">
       <Header
         workflowName={workflowName}
-        currentWorkflowId={workflowId}
-        workflows={workflows}
         saveState={saveState}
         runState={runState}
+        onBack={onBack}
         onSave={() => void saveWorkflow()}
         onExecute={() => void executeWorkflow()}
-        onOpenWorkflow={(id) => void openWorkflow(id)}
-        onNewWorkflow={createNewWorkflow}
-        onRenameWorkflow={(id, name) => void renameWorkflow(id, name)}
-        onDeleteWorkflow={(id) => void deleteWorkflow(id)}
       />
       <div className="workflow-editor__body">
         <NodeLibrary />
@@ -89,21 +97,14 @@ export function WorkflowEditorPage() {
         <PropertiesPanel
           node={selectedNode}
           connections={connections}
+          workflows={workflows}
+          currentWorkflowId={workflowId}
           runResult={selectedNode ? (lastRun?.nodes[selectedNode.id] ?? null) : null}
           onChange={updateNodeConfiguration}
           onDelete={deleteNode}
           onManageConnections={() => setIsConnectionManagerOpen(true)}
         />
       </div>
-      {isConnectionManagerOpen && (
-        <ConnectionManager
-          connections={connections}
-          onClose={() => setIsConnectionManagerOpen(false)}
-          onCreate={(input) => createConnection(input)}
-          onUpdate={(id, patch) => updateConnection(id, patch)}
-          onDelete={(id) => deleteConnection(id)}
-        />
-      )}
       <StatusBar
         nodeCount={nodes.length}
         edgeCount={edges.length}
@@ -113,6 +114,15 @@ export function WorkflowEditorPage() {
         isDirty={isDirty}
         runState={runState}
       />
+      {isConnectionManagerOpen && (
+        <ConnectionManager
+          connections={connections}
+          onClose={() => setIsConnectionManagerOpen(false)}
+          onCreate={(input) => createConnection(input)}
+          onUpdate={(id, patch) => updateConnection(id, patch)}
+          onDelete={(id) => deleteConnection(id)}
+        />
+      )}
     </div>
   );
 }

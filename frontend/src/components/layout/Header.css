@@ -41,6 +41,15 @@
   background: var(--border-strong);
 }
 
+.app-header__workflow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .app-header__actions {
   display: flex;
   align-items: center;

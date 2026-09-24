@@ -10,6 +10,7 @@ import type {
   NodeRunResult,
   NodeStatus,
   WorkflowNode,
+  WorkflowSummary,
 } from '../../types';
 import { formatBytes } from '../../utils/format';
 import { STATUS_LABELS } from '../../utils/theme';
@@ -19,6 +20,8 @@ import './PropertiesPanel.css';
 interface PropertiesPanelProps {
   node: WorkflowNode | null;
   connections: ConnectionSummary[];
+  workflows: WorkflowSummary[];
+  currentWorkflowId: string | null;
   runResult: NodeRunResult | null;
   onChange: (nodeId: string, patch: Partial<NodeConfiguration>) => void;
   onDelete: (nodeId: string) => void;
@@ -34,6 +37,8 @@ function isFileAttachment(value: ConfigValue): value is FileAttachment {
 export function PropertiesPanel({
   node,
   connections,
+  workflows,
+  currentWorkflowId,
   runResult,
   onChange,
   onDelete,
@@ -194,6 +199,32 @@ export function PropertiesPanel({
     );
   }
 
+  function renderWorkflowField(field: ConfigField) {
+    const options = workflows.filter(
+      (workflow) => workflow.id !== currentWorkflowId,
+    );
+    const rawValue = config[field.key];
+    const value = typeof rawValue === 'string' ? rawValue : '';
+
+    return (
+      <select
+        id={`config-${field.key}`}
+        className="field__select"
+        value={value}
+        onChange={(event) =>
+          setConfigValue(field.key, event.target.value || null)
+        }
+      >
+        <option value="">Select a workflow…</option>
+        {options.map((workflow) => (
+          <option key={workflow.id} value={workflow.id}>
+            {workflow.name}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
   function renderConfigField(field: ConfigField) {
     if (field.type === 'file') {
       return renderFileField(field);
@@ -201,6 +232,10 @@ export function PropertiesPanel({
 
     if (field.type === 'connection') {
       return renderConnectionField(field);
+    }
+
+    if (field.type === 'workflow') {
+      return renderWorkflowField(field);
     }
 
     if (field.type === 'textarea') {

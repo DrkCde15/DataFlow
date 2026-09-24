@@ -1,0 +1,232 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-base);
+  overflow-y: auto;
+}
+
+.home__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: var(--header-height);
+  flex-shrink: 0;
+  padding: 0 20px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.home__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home__topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home__search {
+  width: 220px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  outline: none;
+}
+
+.home__search:focus {
+  border-color: var(--accent);
+}
+
+.home__search::placeholder {
+  color: var(--text-muted);
+}
+
+.home__main {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 36px 24px 64px;
+}
+
+.home__heading {
+  margin-bottom: 24px;
+}
+
+.home__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.home__subtitle {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.home__error {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.home__status {
+  padding: 24px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.home__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 40px 32px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+.home__empty-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.home__empty-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.home__empty-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.home__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.home__card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  transition: border-color 0.12s ease;
+}
+
+.home__card:hover {
+  border-color: var(--border-strong);
+}
+
+.home__card--confirm {
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+.home__open {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home__open:hover .home__name {
+  color: var(--accent);
+}
+
+.home__name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.12s ease;
+}
+
+.home__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.home__rename-input {
+  flex: 1;
+  min-width: 0;
+  margin: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  outline: none;
+}
+
+.home__card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding-right: 4px;
+}
+
+.home__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.home__action:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.home__action--danger:hover {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}

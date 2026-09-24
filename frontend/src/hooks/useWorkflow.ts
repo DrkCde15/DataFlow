@@ -13,17 +13,14 @@ import {
   createConnection as createConnectionApi,
   createWorkflow,
   deleteConnection as deleteConnectionApi,
-  deleteWorkflow as deleteWorkflowApi,
   fetchWorkflow,
   isServerUnreachable,
   listConnections,
   listWorkflows,
-  renameWorkflow as renameWorkflowApi,
   runWorkflow as runWorkflowApi,
   updateConnection as updateConnectionApi,
   updateWorkflow,
 } from '../api/client';
-import { DEMO_WORKFLOW_NAME, demoEdges, demoNodes } from '../data/demoWorkflow';
 import { buildDefaultConfig, getNodeDefinition } from '../nodes/registry';
 import type {
   ApiStatus,
@@ -72,13 +69,11 @@ export interface UseWorkflowResult {
     nodeId: string,
     patch: Partial<NodeConfiguration>,
   ) => void;
-  loadInitialWorkflow: () => Promise<void>;
   saveWorkflow: () => Promise<void>;
   openWorkflow: (id: string) => Promise<void>;
   createNewWorkflow: () => void;
-  renameWorkflow: (id: string, name: string) => Promise<void>;
-  deleteWorkflow: (id: string) => Promise<void>;
   connections: ConnectionSummary[];
+  refreshWorkflows: () => Promise<WorkflowSummary[]>;
   refreshConnections: () => Promise<void>;
   createConnection: (input: ConnectionInput) => Promise<ConnectionSummary>;
   updateConnection: (
@@ -93,14 +88,10 @@ export interface UseWorkflowResult {
 }
 
 export function useWorkflow(): UseWorkflowResult {
-  const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowNode>(
-    demoNodes,
-  );
-  const [edges, setEdges, onEdgesChange] = useEdgesState<WorkflowEdge>(
-    demoEdges,
-  );
+  const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<WorkflowEdge>([]);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
-  const [workflowName, setWorkflowName] = useState(DEMO_WORKFLOW_NAME);
+  const [workflowName, setWorkflowName] = useState('Untitled workflow');
   const [workflows, setWorkflows] = useState<WorkflowSummary[]>([]);
   const [connections, setConnections] = useState<ConnectionSummary[]>([]);
   const [saveState, setSaveState] = useState<SaveState>('idle');
@@ -255,23 +246,6 @@ export function useWorkflow(): UseWorkflowResult {
     [setNodes, markDirty],
   );
 
-  const loadInitialWorkflow = useCallback(async () => {
-    try {
-      const list = await listWorkflows();
-      setWorkflows(list);
-      setApiStatus('online');
-
-      if (list.length === 0) {
-        return;
-      }
-
-      const record = await fetchWorkflow(list[0].id);
-      applyRecord(record);
-    } catch {
-      setApiStatus('offline');
-    }
-  }, [applyRecord]);
-
   const persistCurrent = useCallback(async () => {
     const payload = {
       name: workflowName,
@@ -379,47 +353,6 @@ export function useWorkflow(): UseWorkflowResult {
     resetToLocalWorkflow();
   }, [confirmDiscardChanges, resetToLocalWorkflow]);
 
-  const renameWorkflow = useCallback(
-    async (id: string, name: string) => {
-      try {
-        const renamed = await renameWorkflowApi(id, name);
-        if (id === workflowId) {
-          setWorkflowName(renamed.name);
-        }
-        setApiStatus('online');
-        await refreshWorkflows();
-      } catch (error) {
-        if (isServerUnreachable(error)) {
-          setApiStatus('offline');
-        }
-      }
-    },
-    [workflowId, refreshWorkflows],
-  );
-
-  const deleteWorkflow = useCallback(
-    async (id: string) => {
-      const isCurrent = id === workflowId;
-      if (isCurrent && !confirmDiscardChanges()) {
-        return;
-      }
-
-      try {
-        await deleteWorkflowApi(id);
-        setApiStatus('online');
-        await refreshWorkflows();
-        if (isCurrent) {
-          resetToLocalWorkflow();
-        }
-      } catch (error) {
-        if (isServerUnreachable(error)) {
-          setApiStatus('offline');
-        }
-      }
-    },
-    [workflowId, confirmDiscardChanges, refreshWorkflows, resetToLocalWorkflow],
-  );
-
   const refreshConnections = useCallback(async () => {
     try {
       const list = await listConnections();
@@ -491,6 +424,7 @@ export function useWorkflow(): UseWorkflowResult {
     workflowId,
     workflowName,
     workflows,
+    refreshWorkflows,
     saveState,
     apiStatus,
     isDirty,
@@ -500,12 +434,9 @@ export function useWorkflow(): UseWorkflowResult {
     addNode,
     deleteNode,
     updateNodeConfiguration,
-    loadInitialWorkflow,
     saveWorkflow,
     openWorkflow,
     createNewWorkflow,
-    renameWorkflow,
-    deleteWorkflow,
     connections,
     refreshConnections,
     createConnection,

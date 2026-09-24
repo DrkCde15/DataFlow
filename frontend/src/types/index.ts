@@ -15,7 +15,8 @@ export type ConfigFieldType =
   | 'number'
   | 'select'
   | 'file'
-  | 'connection';
+  | 'connection'
+  | 'workflow';
 
 export interface ConfigFieldOption {
   value: string;
@@ -72,8 +73,10 @@ export type IconName =
   | 'settings'
   | 'play'
   | 'chevron-down'
+  | 'chevron-left'
   | 'pencil'
-  | 'trash';
+  | 'trash'
+  | 'workflow';
 
 export interface NodeCategoryMeta {
   id: NodeCategory;
